@@ -11,22 +11,22 @@ fn bench_encode_attribute(c: &mut Criterion) {
     let mut group = c.benchmark_group("encode_throughput");
     group.throughput(Throughput::Bytes(LEN));
     group.bench_function("encode attribute", |b| {
-        b.iter(|| encode_attribute(black_box(BIG_STR)))
+        b.iter(|| encode(black_box(BIG_STR)))
     });
     group.finish();
 }
 
-fn bench_encode_minimal(c: &mut Criterion) {
-    let mut group = c.benchmark_group("encode_throughput");
-    group.throughput(Throughput::Bytes(LEN));
-    group.bench_function("encode minimal", |b| {
-        b.iter(|| encode_minimal(black_box(BIG_STR)))
-    });
-    group.finish();
-}
+// fn bench_encode_minimal(c: &mut Criterion) {
+//     let mut group = c.benchmark_group("encode_throughput");
+//     group.throughput(Throughput::Bytes(LEN));
+//     group.bench_function("encode minimal", |b| {
+//         b.iter(|| encode_minimal(black_box(BIG_STR)))
+//     });
+//     group.finish();
+// }
 
 fn bench_decode_attribute(c: &mut Criterion) {
-    let encoded = encode_attribute(BIG_STR);
+    let encoded = encode(BIG_STR);
 
     let mut group = c.benchmark_group("decode_throughput");
     group.throughput(Throughput::Bytes(LEN));
@@ -36,22 +36,22 @@ fn bench_decode_attribute(c: &mut Criterion) {
     group.finish();
 }
 
-fn bench_decode_minimal(c: &mut Criterion) {
-    let encoded = encode_minimal(BIG_STR);
+// fn bench_decode_minimal(c: &mut Criterion) {
+//     let encoded = encode_minimal(BIG_STR);
 
-    let mut group = c.benchmark_group("decode_throughput");
-    group.throughput(Throughput::Bytes(LEN));
-    group.bench_function("decode minimal", |b| {
-        b.iter(|| decode_html(black_box(&encoded)))
-    });
-    group.finish();
-}
+//     let mut group = c.benchmark_group("decode_throughput");
+//     group.throughput(Throughput::Bytes(LEN));
+//     group.bench_function("decode minimal", |b| {
+//         b.iter(|| decode_html(black_box(&encoded)))
+//     });
+//     group.finish();
+// }
 
 criterion_group!(
     benches,
     bench_encode_attribute,
-    bench_encode_minimal,
+    //bench_encode_minimal,
     bench_decode_attribute,
-    bench_decode_minimal
+    //bench_decode_minimal
 );
 criterion_main!(benches);

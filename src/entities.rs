@@ -11,6 +11,8 @@ pub(crate) fn lookup_minimal(c: char) -> Option<&'static str> {
     .into()
 }
 
+pub static HEX_LOOKUP: &'static [u8] = b"0123456789ABCDEF";
+
 pub static NAMED_ENTITIES: &'static [(&'static str, char)] = &[
     ("AElig", '\u{00C6}'),
     ("Aacute", '\u{00C1}'),

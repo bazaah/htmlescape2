@@ -7,12 +7,6 @@ use std::char;
 use htmlescape2::DecodeErrKind::*;
 use htmlescape2::*;
 
-macro_rules! assert_typed_eq (($T: ty, $given: expr, $expected: expr) => ({
-    let given_val: &$T = $given;
-    let expected_val: &$T = $expected;
-    assert_eq!(given_val, expected_val);
-}));
-
 macro_rules! test_decode_err(($name: ident, $inp: expr, $pos: expr, $kind: expr) => (
         #[test]
         fn $name() {
@@ -36,13 +30,13 @@ fn test_encode_minimal() {
     ];
 
     for &(input, expected) in data.iter() {
-        let actual = encode_minimal(input);
+        let actual = encode(input);
         assert_eq!(&actual, expected);
     }
 }
 
 #[test]
-fn test_encode_attribute() {
+fn test_encode() {
     let data = [
         ("", ""),
         ("0 3px", "0&#x20;3px"),
@@ -50,7 +44,7 @@ fn test_encode_attribute() {
         ("hej; hå", "hej&#x3B;&#x20;h&#xE5;"),
     ];
     for &(input, expected) in data.iter() {
-        let actual = encode_attribute(input);
+        let actual = encode(input);
         assert_eq!(&actual, expected);
     }
 }
@@ -91,7 +85,7 @@ fn random_roundtrip() {
     let mut rng = rand::thread_rng();
     for _ in 1..100 {
         let original = random_str(&mut rng);
-        let encoded = encode_attribute(&original);
+        let encoded = encode(&original);
         match decode_html(&encoded) {
             Err(reason) => panic!("error at \"{}\", reason: {:?}", original, reason),
             Ok(decoded) => assert_eq!(original, decoded),
