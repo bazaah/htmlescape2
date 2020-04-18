@@ -6,13 +6,15 @@ license = "Apache-2.0 / MIT"
 repository = "https://github.com/bazaah/htmlescape2"
 description = "A library for HTML entity encoding and decoding"
 
-[lib]
-bench = false
+[dependencies]
 
 [dev-dependencies]
 num = "0.2"
 rand = "0.7"
 criterion = "0.3"
+
+[lib]
+bench = false
 
 [[bench]]
 name = "default"

@@ -1,68 +1,9 @@
 use entities::*;
 use io_support::write_char;
-use std::char;
-use std::io::{self, Write};
-
-///
-/// HTML entity-encode a string.
-///
-/// Entity-encodes a string with a minimal set of entities:
-///
-/// - `" -- &quot;`
-/// - `& -- &amp;`
-/// - `' -- &#x27;`
-/// - `< -- &lt;`
-/// - `> -- &gt;`
-///
-/// # Arguments
-/// - `s` - The string to encode.
-///
-/// # Return value
-/// The encoded string.
-///
-/// # Example
-/// ~~~
-/// let encoded = htmlescape2::encode_minimal("<em>Hej!</em>");
-/// assert_eq!(&encoded, "&lt;em&gt;Hej!&lt;/em&gt;");
-/// ~~~
-///
-/// # Safety notes
-/// Using the function to encode an untrusted string that is to be used as a HTML attribute value
-/// may lead to XSS vulnerabilities. Consider the following example:
-///
-/// ~~~
-/// let name = "dummy onmouseover=alert(/XSS/)";    // User input
-/// let tag = format!("<option value={}>", htmlescape2::encode_minimal(name));
-/// // Here `tag` is    "<option value=dummy onmouseover=alert(/XSS/)>"
-/// ~~~
-///
-/// Use `escape_attribute` for escaping HTML attribute values.
-pub fn encode_minimal(s: &str) -> String {
-    let mut writer = Vec::with_capacity((s.len() / 3 + 1) * 4);
-    match encode_minimal_w(s, &mut writer) {
-        Err(_) => panic!(),
-        Ok(_) => String::from_utf8(writer).expect("impossible invalid UTF-8 in output"),
-    }
-}
-
-///
-/// HTML entity-encode a string to a writer.
-///
-/// Similar to `encode_minimal`, except that the output is written to a writer rather
-/// than returned as a `String`.
-///
-/// # Arguments
-/// - `s` - The string to encode.
-/// - `writer` - Output is written to here.
-pub fn encode_minimal_w<W: Write>(s: &str, writer: &mut W) -> io::Result<()> {
-    for c in s.chars() {
-        match get_entity(c) {
-            None => try!(write_char(writer, c)),
-            Some(entity) => try!(writer.write_all(entity.as_bytes())),
-        }
-    }
-    Ok(())
-}
+use std::{
+    borrow::Cow,
+    io::{self, Write},
+};
 
 ///
 /// HTML entity-encodes a string for use in attributes values.
@@ -85,7 +26,7 @@ pub fn encode_minimal_w<W: Write>(s: &str, writer: &mut W) -> io::Result<()> {
 /// let encoded = htmlescape2::encode_attribute("\"No\", he said.");
 /// assert_eq!(&encoded, "&quot;No&quot;&#x2C;&#x20;he&#x20;said&#x2E;");
 /// ~~~
-pub fn encode_attribute(s: &str) -> String {
+pub fn encode_attribute(s: &str) -> Cow<'_, str> {
     let mut writer = Vec::with_capacity(s.len() * 3);
     match encode_attribute_w(s, &mut writer) {
         Err(_) => panic!(),
@@ -102,37 +43,27 @@ pub fn encode_attribute(s: &str) -> String {
 /// # Arguments
 /// - `s` - The string to encode.
 /// - `writer` - Output is written to here.
-pub fn encode_attribute_w<W: Write>(s: &str, writer: &mut W) -> io::Result<()> {
-    for c in s.chars() {
-        let b = c as usize;
-        let res = match get_entity(c) {
-            Some(entity) => writer.write_all(entity.as_bytes()),
-            None => {
-                if b < 256 && (b > 127 || !is_ascii_alnum(c)) {
-                    write_hex(writer, c)
-                } else {
-                    write_char(writer, c)
-                }
-            }
-        };
-        try!(res);
-    }
-    Ok(())
+pub fn encode_attribute_w<W: Write>(writer: &mut W, s: &str) -> io::Result<()> {
+    s.chars().try_for_each(|c| encode_char(writer, c))
 }
 
-fn get_entity(c: char) -> Option<&'static str> {
-    match MINIMAL_ENTITIES.binary_search_by(|&(ec, _)| ec.cmp(&c)) {
-        Err(..) => None,
-        Ok(idx) => {
-            let (_, e) = MINIMAL_ENTITIES[idx];
-            Some(e)
+fn encode_char<W: Write>(writer: &mut W, c: char) -> io::Result<()> {
+    match lookup_minimal(c) {
+        Some(entity) => writer.write_all(entity.as_bytes()),
+        None => {
+            let b = c as usize;
+            if b < 256 && (b > 127 || !is_ascii_alnum(c)) {
+                write_hex(writer, c)
+            } else {
+                write_char(writer, c)
+            }
         }
     }
 }
 
 fn write_hex<W: Write>(writer: &mut W, c: char) -> io::Result<()> {
     let hex = b"0123456789ABCDEF";
-    try!(writer.write(b"&#x"));
+    writer.write(b"&#x")?;
     let n = c as u8;
     let bytes = [
         hex[((n & 0xF0) >> 4) as usize],

@@ -1,12 +1,17 @@
-pub static MINIMAL_ENTITIES: [(char, &'static str); 5] = [
-    ('"', "&quot;"),
-    ('&', "&amp;"),
-    ('\'', "&#x27;"),
-    ('<', "&lt;"),
-    ('>', "&gt;")
-];
+#[inline]
+pub(crate) fn lookup_minimal(c: char) -> Option<&'static str> {
+    match c {
+        '"' => "&quot;",
+        '&' => "&amp;",
+        '\'' => "&#x27;",
+        '<' => "&lt;",
+        '>' => "&gt;",
+        _ => None?,
+    }
+    .into()
+}
 
-pub static NAMED_ENTITIES: &'static[(&'static str, char)] = &[
+pub static NAMED_ENTITIES: &'static [(&'static str, char)] = &[
     ("AElig", '\u{00C6}'),
     ("Aacute", '\u{00C1}'),
     ("Acirc", '\u{00C2}'),
@@ -260,4 +265,3 @@ pub static NAMED_ENTITIES: &'static[(&'static str, char)] = &[
     ("zwj", '\u{200D}'),
     ("zwnj", '\u{200C}'),
 ];
-
