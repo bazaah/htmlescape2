@@ -1,15 +1,19 @@
 [package]
-name = "htmlescape"
+name = "htmlescape2"
 version = "0.3.1"
-authors = [ "Viktor Dahl <pazaconyoman@gmail.com>" ]
-license = "Apache-2.0 / MIT / MPL-2.0"
-repository = "https://github.com/veddan/rust-htmlescape"
+authors = [ "Baz <github(a)luxolus.com>", "Viktor Dahl <pazaconyoman@gmail.com>" ]
+license = "Apache-2.0 / MIT"
+repository = "https://github.com/bazaah/htmlescape2"
 description = "A library for HTML entity encoding and decoding"
 
 [lib]
-name = "htmlescape"
-path = "src/lib.rs"
+bench = false
 
 [dev-dependencies]
-num = "0.1.26"
-rand = "0.3.14"
+num = "0.2"
+rand = "0.7"
+criterion = "0.3"
+
+[[bench]]
+name = "default"
+harness = false
